@@ -339,19 +339,19 @@
                :actual e#})))))
 
 (defmethod assert-expr 'every? [msg form]
-  (let [pred (second form)
-        coll (nth form 2)]
-    `(let [pred# ~(second form)
-           coll# ~(nth form 2)
-           dropped# (drop-while (comp pred# second) (map vector (quote ~coll) coll#))
-           pass# (empty? dropped#)]
-       {:type (if pass# :pass :fail)
-        :message ~msg
-        :expected '~form
-        :result pass#
-        :actual (if pass# true {:not-index (count dropped#) 
-                                :expr (-> dropped# first first)
-                                :val (-> dropped# first second)})})))
+  `(let [pred# ~(second form)
+         coll# ~(nth form 2)
+         val# (->> coll#
+                 (map-indexed vector)
+                 (drop-while (comp pred# second))
+                 first)   
+         pass# (nil? val#)]
+     {:type (if pass# :pass :fail)
+      :message ~msg
+      :expected '~form
+      :result pass#
+      :actual (if pass# true {:not-index (first val#) 
+                              :val (second val#)})}))
 
 (defmethod assert-expr 'some [msg form]
   `(let [pred# ~(second form)
@@ -437,4 +437,3 @@
             (zero? (mod (count args) (count argv)))))
     `(temp/do-template ~argv (is ~expr) ~@args)
     (throw (IllegalArgumentException. "The number of args doesn't match are's argv."))))
-
