@@ -413,7 +413,9 @@
   ([form] `(is ~form nil))
   ([form msg] `(try-expr ~msg ~form)))
 
-(defmacro are
+
+;;commented out since it refers to temp/do-template
+#_(defmacro are
   "Checks multiple assertions with a template expression.
   See clojure.template/do-template for an explanation of
   templates.
