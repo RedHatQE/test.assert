@@ -164,11 +164,9 @@
 (defmethod report :default [m]
   (with-test-out (prn m)))
 
-(defmethod report :pass [m]
-  )
+(defmethod report :pass [m])
 
 (defmethod report :fail [m]
-
   (throw (AssertionError.
           (apply format "%s%nexpected: %s%n  actual: %s%n  locals: %s"
                  (or (:message m) "Assertion Failed.")
@@ -178,25 +176,17 @@
                        (:env m)])))))
 
 (defmethod report :error [m]
-
-  (let [actual (:actual m)
-        err (AssertionError.
-             (format "Unable to complete assertion.%nexpected: %s%n%s"
-                     (pr-str (:expected m))
-                     (pr-str (:actual m))))
-        ]
-    (if (instance? Throwable actual)
-      (.initCause err actual)
-      err))
-  
-  (with-test-out
-   (when-let [message (:message m)] (println message))
-   (println "expected:" (pr-str (:expected m)))
-   (print "  actual: ")
-   (let [actual (:actual m)]
+  (throw
+   (let [actual (:actual m)
+         err (AssertionError.
+              (format "Unable to complete assertion.%nexpected: %s%nactual: %s"
+                      (pr-str (:expected m))
+                      (pr-str (if (instance? Throwable actual)
+                                (class actual)
+                                actual))))]
      (if (instance? Throwable actual)
-       (stack/print-cause-trace actual *stack-trace-depth*)
-       (prn actual)))))
+       (.initCause err actual)
+       err))))
 
 (defmethod report :summary [m]
   (with-test-out
